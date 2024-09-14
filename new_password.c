@@ -1,2 +1,2 @@
-#include "timer.h"
+#include "timer.c"
 #include <stdio.h>
