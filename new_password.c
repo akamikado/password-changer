@@ -333,7 +333,7 @@ void change_password(char *username, char *password_file) {
       break;
     }
 
-    for (int i = 8 * (int)pow(2, attempt - 1); i > 0; i--) {
+    for (int i = 8 * (int)pow(2, attempt - 1); i > 0 && attempt != 4; i--) {
       printf("Wait for %d seconds\n", i);
       sleep(1);
     }
