@@ -1,10 +1,16 @@
-#include "timer.c"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define MAX_PWD_SIZE 20
+
+void backout(int n) {
+  for (int i = n; i > 0; i--) {
+    /* printf("Wait for %d seconds\n", i); */
+  }
+}
 
 char *change_password_prompt(int n) {
   char *new_password = (char *)malloc(MAX_PWD_SIZE * sizeof(char));
@@ -152,6 +158,7 @@ int validate_new_password(char *username, char *new_password,
 
     chars_matched =
         match_substrings(new_password_lowercase, old_password_lowercase);
+    free(old_password_lowercase);
     if (chars_matched >= 4) {
       printf("Password contains %d characters consecutively similar to one of "
              "the past 10 passwords.\n",
@@ -175,20 +182,15 @@ int validate_new_password(char *username, char *new_password,
 
     name = convert_to_lowercase(name);
     surname = convert_to_lowercase(surname);
-
-    if (strstr(new_password_lowercase, name) != NULL) {
-      printf("Password contains name portion of the username.\n");
-      is_valid_password = 0;
-    }
-
-    if (strstr(new_password_lowercase, surname) != NULL) {
-      printf("Password contains surname portion of the username.\n");
-      is_valid_password = 0;
-    }
-
     if (strstr(new_password_lowercase, name) != NULL &&
         strstr(new_password_lowercase, surname) != NULL) {
       printf("Password contains name and surname portions of username.\n");
+      is_valid_password = 0;
+    } else if (strstr(new_password_lowercase, name) != NULL) {
+      printf("Password contains name portion of the username.\n");
+      is_valid_password = 0;
+    } else if (strstr(new_password_lowercase, surname) != NULL) {
+      printf("Password contains surname portion of the username.\n");
       is_valid_password = 0;
     }
 
@@ -197,15 +199,19 @@ int validate_new_password(char *username, char *new_password,
     chars_matched = match_substrings(new_password_lowercase, dob_stripped);
 
     if (chars_matched >= 3) {
-      printf("Password contains %d digits consecutively similar to the date"
+      printf("Password contains %d digits consecutively similar to the date "
              "of birth.\n",
              chars_matched);
       is_valid_password = 0;
     }
 
+    free(name);
+    free(surname);
+    free(dob_stripped);
     break;
   }
 
+  free(new_password_lowercase);
   fclose(pwd_ptr);
   fclose(master_ptr);
 
@@ -216,7 +222,43 @@ void replace_password(char *password_file, char *new_password) {
   FILE *pwd_ptr = fopen(password_file, "r");
   fseek(pwd_ptr, 0, SEEK_END);
   long file_size = ftell(pwd_ptr);
+  fseek(pwd_ptr, 0, SEEK_SET);
+  char *file_contents = (char *)malloc((file_size + 1) * sizeof(char));
+  fread(file_contents, 1, file_size, pwd_ptr);
   fclose(pwd_ptr);
+
+  int no_of_lines = 0;
+  for (int i = 0; i < file_size; i++) {
+    if (file_contents[i] == '\n') {
+      no_of_lines++;
+    }
+  }
+  printf("no_of_lines: %d\n", no_of_lines);
+
+  int file_size_without_last_line = file_size - 2;
+
+  while (file_contents[file_size_without_last_line] != '\n') {
+    file_size_without_last_line--;
+  }
+  file_size_without_last_line++;
+
+  printf("file_size_without_last_line: %d\n", file_size_without_last_line);
+  printf("%.*s", file_size_without_last_line, file_contents);
+
+  char *new_file_contents = (char *)malloc(
+      (file_size_without_last_line + strlen(new_password) + 2) * sizeof(char));
+  strncpy(new_file_contents, new_password, strlen(new_password));
+  new_file_contents[strlen(new_password)] = '\n';
+  strncpy(new_file_contents + strlen(new_password) + 1, file_contents,
+          file_size_without_last_line);
+  new_file_contents[file_size_without_last_line + strlen(new_password) + 1] =
+      '\0';
+
+  FILE *pwd_ptr_write = fopen(password_file, "w");
+  fputs(new_file_contents, pwd_ptr_write);
+  free(file_contents);
+  free(new_file_contents);
+  fclose(pwd_ptr_write);
 }
 
 void change_password(char *username, char *password_file) {
@@ -234,7 +276,15 @@ void change_password(char *username, char *password_file) {
       break;
     }
 
-    backout(8 * (int)pow(2, attempt - 1));
+    for (int i = 8 * (int)pow(2, attempt - 1); i > 0; i--) {
+      printf("Wait for %d seconds\n", i);
+      sleep(1);
+    }
     attempt++;
+    free(new_password);
+    if (attempt == 4) {
+      printf("Wrong password entered 3 times. Application exiting...\n");
+      exit(1);
+    }
   }
 }
