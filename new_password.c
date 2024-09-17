@@ -6,6 +6,35 @@
 
 #define MAX_PWD_SIZE 20
 
+int is_digit(char c) {
+  if (c >= '0' && c <= '9') {
+    return 1;
+  }
+  return 0;
+}
+
+int is_lower_case(char c) {
+  if (c >= 'a' && c <= 'z') {
+    return 1;
+  }
+  return 0;
+}
+
+int is_upper_case(char c) {
+  if (c >= 'A' && c <= 'Z') {
+    return 1;
+  }
+  return 0;
+}
+
+int is_special_char(char c) {
+  if (c == '.' || c == '!' || c == '@' || c == '#' || c == '$' || c == '%' ||
+      c == '^' || c == '&' || c == '*' || c == '-' || c == '_') {
+    return 1;
+  }
+  return 0;
+}
+
 char *change_password_prompt(int n) {
   char *new_password = (char *)malloc(MAX_PWD_SIZE * sizeof(char));
 
@@ -51,9 +80,9 @@ char *strip_hyphens(char *dob) {
   return dob_stripped;
 }
 
-int match_substrings(char *str1, char *str2) {
+int match_substrings(char *str1, char *str2, int min_w) {
   int max = 0;
-  int w = 4;
+  int w = min_w;
   int len1 = strlen(str1);
   int len2 = strlen(str2);
   for (; w <= len1; w++) {
@@ -94,55 +123,61 @@ int validate_new_password(char *username, char *new_password,
   }
 
   // R2
+  int contains_upper_case = 0;
   for (int i = 0; i < password_length; i++) {
-    if (new_password[i] >= 'A' && new_password[i] <= 'Z') {
+    if (is_upper_case(new_password[i])) {
+      contains_upper_case = 1;
       break;
     }
-    if (i == strlen(new_password) - 1) {
-      printf("Password does not contain at least one uppercase letter.\n");
-      is_valid_password = 0;
-    }
+  }
+  if (!contains_upper_case) {
+    printf("Password does not contain at least one uppercase letter.\n");
+    is_valid_password = 0;
   }
 
   // R3
+  int contains_lower_case = 0;
   for (int i = 0; i < password_length; i++) {
-    if (new_password[i] >= 'a' && new_password[i] <= 'z') {
+    if (is_lower_case(new_password[i])) {
+      contains_lower_case = 1;
       break;
     }
-    if (i == password_length - 1) {
-      printf("Password does not contain at least one lowercase letter.\n");
-      is_valid_password = 0;
-    }
+  }
+  if (!contains_lower_case) {
+    printf("Password does not contain at least one lowercase letter.\n");
+    is_valid_password = 0;
   }
 
   // R4
+  int contains_digit = 0;
   for (int i = 0; i < password_length; i++) {
-    if (new_password[i] >= '0' && new_password[i] <= '9') {
+    if (is_digit(new_password[i])) {
+      contains_digit = 1;
       break;
     }
-    if (i == password_length - 1) {
-      printf("Password does not contain at least one digit.\n");
-      is_valid_password = 0;
-    }
+  }
+  if (!contains_digit) {
+    printf("Password does not contain at least one digit.\n");
+    is_valid_password = 0;
   }
 
   // R5
+  int contains_special_char = 0;
   for (int i = 0; i < password_length; i++) {
-    if (new_password[i] == '.' || new_password[i] == '!' ||
-        new_password[i] == '@' || new_password[i] == '#' ||
-        new_password[i] == '$' || new_password[i] == '%' ||
-        new_password[i] == '^' || new_password[i] == '&' ||
-        new_password[i] == '*' || new_password[i] == '-' ||
-        new_password[i] == '_') {
+    if (is_special_char(new_password[i])) {
+      contains_special_char = 1;
       break;
     }
-    if (i == password_length - 1) {
-      printf("Password does not contain at least one of the allowed special "
-             "characters.\n");
-      is_valid_password = 0;
+    if (!is_digit(new_password[i]) && !is_lower_case(new_password[i]) &&
+        !is_upper_case(new_password[i])) {
+      break;
     }
   }
-
+  if (!contains_special_char) {
+    printf("Password does not contain at least one of the allowed special "
+           "characters.\n");
+    is_valid_password = 0;
+  }
   // R6
   char old_password[MAX_PWD_SIZE];
   char *new_password_lowercase = convert_to_lowercase(new_password);
@@ -151,7 +186,7 @@ int validate_new_password(char *username, char *new_password,
     char *old_password_lowercase = convert_to_lowercase(old_password);
 
     chars_matched =
-        match_substrings(new_password_lowercase, old_password_lowercase);
+        match_substrings(new_password_lowercase, old_password_lowercase, 4);
     free(old_password_lowercase);
     if (chars_matched >= 4) {
       printf("Password contains %d characters consecutively similar to one of "
@@ -170,27 +205,48 @@ int validate_new_password(char *username, char *new_password,
     if (strcmp(user, username) != 0) {
       continue;
     }
+    printf("User: %s\n", user);
 
-    char *name = strtok(user, ".");
-    char *surname = strtok(NULL, ".");
+    // Fix the tokenization of the username
+    char *username_copy = strdup(username); // Keep the original username intact
+    char *token = strtok(username_copy, ".");
+    if (token != NULL) {
+      char *lowercase_name = convert_to_lowercase(token);
+      token = strtok(NULL, ".");
+      if (token != NULL) {
+        char *lowercase_surname = convert_to_lowercase(token);
 
-    name = convert_to_lowercase(name);
-    surname = convert_to_lowercase(surname);
-    if (strstr(new_password_lowercase, name) != NULL &&
-        strstr(new_password_lowercase, surname) != NULL) {
-      printf("Password contains name and surname portions of username.\n");
-      is_valid_password = 0;
-    } else if (strstr(new_password_lowercase, name) != NULL) {
-      printf("Password contains name portion of the username.\n");
-      is_valid_password = 0;
-    } else if (strstr(new_password_lowercase, surname) != NULL) {
-      printf("Password contains surname portion of the username.\n");
-      is_valid_password = 0;
+        // Debugging prints
+        printf("Username: %s\n", username);
+        printf("Name (lowercase): %s\n", lowercase_name);
+        printf("Surname (lowercase): %s\n", lowercase_surname);
+
+        // Check if name or surname is in the new password
+        int name_is_in_password =
+            (strstr(new_password_lowercase, lowercase_name) != NULL);
+        int surname_is_in_password =
+            (strstr(new_password_lowercase, lowercase_surname) != NULL);
+
+        if (name_is_in_password && surname_is_in_password) {
+          printf("Password contains both the name and surname portions of the "
+                 "username.\n");
+          is_valid_password = 0;
+        } else if (name_is_in_password) {
+          printf("Password contains the name portion of the username.\n");
+          is_valid_password = 0;
+        } else if (surname_is_in_password) {
+          printf("Password contains the surname portion of the username.\n");
+          is_valid_password = 0;
+        }
+        free(lowercase_surname);
+      }
+      free(lowercase_name);
     }
+    free(username_copy);
 
     char *dob_stripped = strip_hyphens(dob);
 
-    chars_matched = match_substrings(new_password_lowercase, dob_stripped);
+    chars_matched = match_substrings(new_password_lowercase, dob_stripped, 4);
 
     if (chars_matched >= 3) {
       printf("Password contains %d digits consecutively similar to the date "
@@ -199,8 +255,6 @@ int validate_new_password(char *username, char *new_password,
       is_valid_password = 0;
     }
 
-    free(name);
-    free(surname);
     free(dob_stripped);
     break;
   }
