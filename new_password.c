@@ -6,12 +6,6 @@
 
 #define MAX_PWD_SIZE 20
 
-void backout(int n) {
-  for (int i = n; i > 0; i--) {
-    /* printf("Wait for %d seconds\n", i); */
-  }
-}
-
 char *change_password_prompt(int n) {
   char *new_password = (char *)malloc(MAX_PWD_SIZE * sizeof(char));
 
@@ -233,26 +227,35 @@ void replace_password(char *password_file, char *new_password) {
       no_of_lines++;
     }
   }
-  printf("no_of_lines: %d\n", no_of_lines);
 
-  int file_size_without_last_line = file_size - 2;
+  char *new_file_contents;
 
-  while (file_contents[file_size_without_last_line] != '\n') {
-    file_size_without_last_line--;
+  if (no_of_lines == 10) {
+    int file_size_without_last_line = file_size - 2;
+
+    while (file_contents[file_size_without_last_line] != '\n') {
+      file_size_without_last_line--;
+    }
+    file_size_without_last_line++;
+
+    new_file_contents = (char *)malloc(
+        (file_size_without_last_line + strlen(new_password) + 2) *
+        sizeof(char));
+    strncpy(new_file_contents, new_password, strlen(new_password));
+    new_file_contents[strlen(new_password)] = '\n';
+    strncpy(new_file_contents + strlen(new_password) + 1, file_contents,
+            file_size_without_last_line);
+    new_file_contents[file_size_without_last_line + strlen(new_password) + 1] =
+        '\0';
+  } else {
+    new_file_contents =
+        (char *)malloc((file_size + strlen(new_password) + 2) * sizeof(char));
+    strncpy(new_file_contents, new_password, strlen(new_password));
+    new_file_contents[strlen(new_password)] = '\n';
+    strncpy(new_file_contents + strlen(new_password) + 1, file_contents,
+            file_size);
+    new_file_contents[file_size + strlen(new_password) + 1] = '\0';
   }
-  file_size_without_last_line++;
-
-  printf("file_size_without_last_line: %d\n", file_size_without_last_line);
-  printf("%.*s", file_size_without_last_line, file_contents);
-
-  char *new_file_contents = (char *)malloc(
-      (file_size_without_last_line + strlen(new_password) + 2) * sizeof(char));
-  strncpy(new_file_contents, new_password, strlen(new_password));
-  new_file_contents[strlen(new_password)] = '\n';
-  strncpy(new_file_contents + strlen(new_password) + 1, file_contents,
-          file_size_without_last_line);
-  new_file_contents[file_size_without_last_line + strlen(new_password) + 1] =
-      '\0';
 
   FILE *pwd_ptr_write = fopen(password_file, "w");
   fputs(new_file_contents, pwd_ptr_write);

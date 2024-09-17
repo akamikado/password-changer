@@ -15,17 +15,23 @@ int main() {
   char password_file_name[100];
   char date[50];
 
+  int valid_username = 0;
+
   while (fscanf(ptr, "%s %s %s", m_username, date, password_file_name) != EOF) {
     if (strcmp(username, m_username) == 0) {
-      printf("%s\n", password_file_name);
+      valid_username = 1;
       break;
     }
+  }
+
+  if (!valid_username) {
+    printf("Invalid username entered");
+    return 1;
   }
 
   char latest_password[20];
   FILE *p = fopen(password_file_name, "r");
   fscanf(p, "%s", latest_password);
-  printf("%s %s\n", latest_password, entered_password);
   printf("Enter password: ");
   while (count < 3) {
     scanf("%s", entered_password);
