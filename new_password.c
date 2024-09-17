@@ -195,7 +195,7 @@ int validate_new_password(char *username, char *new_password,
            "characters.\n");
     is_valid_password = 0;
   }
-  
+
   // R6
   char old_password[MAX_PWD_SIZE];
   char *new_password_lowercase = convert_to_lowercase(new_password);
