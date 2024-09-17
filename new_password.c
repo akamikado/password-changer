@@ -339,8 +339,8 @@ void change_password(char *username, char *password_file) {
     }
     attempt++;
     free(new_password);
-    if (attempt == 4) {
-      printf("Wrong password entered 3 times. Application exiting...\n");
+    if (attempt == 5) {
+      printf("All 4 attempts failed. You need to try again later.\n");
       exit(1);
     }
   }
