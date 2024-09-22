@@ -1,9 +1,9 @@
+#include <ctype.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include<ctype.h>
 
 #define MAX_PWD_SIZE 20
 
@@ -36,24 +36,23 @@ int is_special_char(char c) {
   return 0;
 }
 
-void print_failed_message(int n){
-    switch(n){
-        case 1:
-        printf("First attempt failed.\n");
-        break;
-        case 2:
-        printf("Second attempt failed.\n");
-        break;
-        case 3:
-        printf("Third attempt failed.\n");
-        break;
-        case 4:
-        printf("Fourth attempt failed.\n");
-        break;
-        default:
-        printf("Attempt failed.\n");
-
-    }
+void print_failed_message(int n) {
+  switch (n) {
+  case 1:
+    printf("First attempt failed.\n");
+    break;
+  case 2:
+    printf("Second attempt failed.\n");
+    break;
+  case 3:
+    printf("Third attempt failed.\n");
+    break;
+  case 4:
+    printf("Fourth attempt failed.\n");
+    break;
+  default:
+    printf("Attempt failed.\n");
+  }
 }
 
 char *change_password_prompt(int n) {
@@ -76,12 +75,12 @@ char *change_password_prompt(int n) {
   return new_password;
 }
 
-char* convert_to_lowercase(const char* str) {
-    char* lowercase_str = strdup(str);
-    for (int i = 0; lowercase_str[i]; i++) {
-        lowercase_str[i] = tolower(lowercase_str[i]);
-    }
-    return lowercase_str;
+char *convert_to_lowercase(const char *str) {
+  char *lowercase_str = strdup(str);
+  for (int i = 0; lowercase_str[i]; i++) {
+    lowercase_str[i] = tolower(lowercase_str[i]);
+  }
+  return lowercase_str;
 }
 
 char *strip_hyphens(char *dob) {
@@ -227,21 +226,21 @@ int validate_new_password(char *username, char *new_password,
     char *username_copy = strdup(username);
     char name[50];
     int i = 0, j = 0;
-    while(username_copy[i] != '.'){
-        name[i] = username_copy[i];
-        i++;
+    while (username_copy[i] != '.') {
+      name[i] = username_copy[i];
+      i++;
     }
-    name[i]='\0';
+    name[i] = '\0';
     i++;
     char *lowercase_name = convert_to_lowercase(name);
 
     char surname[50];
-    while(i!= strlen(username_copy)){
-        surname[j] = username_copy[i];
-        i++;
-        j++;
+    while (i != strlen(username_copy)) {
+      surname[j] = username_copy[i];
+      i++;
+      j++;
     }
-    surname[j]='\0';
+    surname[j] = '\0';
     char *lowercase_surname = convert_to_lowercase(surname);
 
     int name_is_in_password =
@@ -250,15 +249,15 @@ int validate_new_password(char *username, char *new_password,
         (strstr(new_password_lowercase, lowercase_surname) != NULL);
 
     if (name_is_in_password && surname_is_in_password) {
-        printf("Password contains both the name and surname portions of the "
-                "username.\n");
-        is_valid_password = 0;
+      printf("Password contains both the name and surname portions of the "
+             "username.\n");
+      is_valid_password = 0;
     } else if (name_is_in_password) {
-        printf("Password contains the name portion of the username.\n");
-        is_valid_password = 0;
+      printf("Password contains the name portion of the username.\n");
+      is_valid_password = 0;
     } else if (surname_is_in_password) {
-        printf("Password contains the surname portion of the username.\n");
-        is_valid_password = 0;
+      printf("Password contains the surname portion of the username.\n");
+      is_valid_password = 0;
     }
     free(lowercase_surname);
     free(lowercase_name);
